@@ -129,3 +129,7 @@
 - **Ключей из `localStorage` страницы.** Метод скипа, свои фильтры заданий и
   архив ведомостей лежат не в хранилище расширения, а в `localStorage` самой
   LMS, поэтому в профиль не попадают.
+
+## Геометрия кнопок и видеофоны (этот форк)
+
+`customThemeButtonShape` входит в группу theme; playback/speed — appearance. Видео сохраняется строкой data:video/mp4 или data:video/webm в существующих customBackground* (content). Старые профили с изображениями совместимы; геометрия нормализуется при применении. Подробнее: [APPEARANCE-FORK.md](APPEARANCE-FORK.md).

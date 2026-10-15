@@ -111,3 +111,7 @@ eslint.config.js           # ESLint flat config
 **Функция из одного скрипта не видна в другом** — убедись, что оба скрипта подключаются как обычные пути (не через `?script`). В `vite.config.js` должен быть `treeshake: false`.
 
 **Плагин не срабатывает** — проверь, что `matches(url)` возвращает `true` для нужного URL, и что файлы из `scripts` указаны в `web_accessible_resources` манифеста.
+
+## Проверки доработки оформления
+
+`bun test tests/source/appearance.test.ts` — проверки геометрии и формата медиа/профилей. Новые ресурсы перечислены в manifest.config.js и _shared/index.manifest.ts. Для Chrome/Firefox без сборки DMG можно установить зависимости с `bun install --frozen-lockfile --ignore-scripts`.

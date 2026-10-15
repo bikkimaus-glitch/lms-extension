@@ -158,3 +158,8 @@
 | `statements`  | `/learn/reports/student-performance` | `gradebook` (+ `gradebook.css`; расписание контрольных — `course-view/future_exams_api`), `advanced_statements`, `archive-statements`, `metrics_statements`                                                                                                                        |
 | `timetable`   | `/learn/timetable`                   | `timetable_status`, `timetable_join` (+ `timetable_join.css`), `slot_view_main` (главный мир, document_start), `swap_api`, `swap_order_button`, `swap_menu` (+ `swap.css`)                                                                                                         |
 | `attendance`  | `/learn/attendance`                  | `attendance_api`, `attendance_summary`, `attendance_course` (+ `attendance.css`; расписание контрольных — `course-view/future_exams_api`)                                                                                                                                          |
+
+## Формы кнопок и видеофоны (этот форк)
+
+Меню → Тема → Редактор темы → Палитра: скругления, отступы, свой контур.
+Меню → Оформление → Редактор фона: локальные MP4/WebM, пауза, скорость, подложка. [Подробно](APPEARANCE-FORK.md).

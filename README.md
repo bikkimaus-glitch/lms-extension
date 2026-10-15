@@ -50,3 +50,7 @@ bun run build:firefox  # → dist/firefox/
 Подробнее о структуре проекта, плагинах и настройке окружения — в [CONTRIBUTING.md](CONTRIBUTING.md).
 
 E2E-тесты расширения — в [tests/](tests/).
+
+## Доработка оформления в этом форке
+
+Настройка формы кнопок без CSS и локальные видеофоны MP4/WebM: [инструкция](APPEARANCE-FORK.md).
