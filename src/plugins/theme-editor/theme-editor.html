@@ -554,6 +554,59 @@
       footer[hidden] {
         display: none;
       }
+      .shape-card {
+        border: 1px solid var(--border, #d0d5dd);
+        border-radius: 12px;
+        padding: 18px;
+        margin: 0 0 24px;
+      }
+      .shape-card summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .shape-fields {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+      }
+      .shape-fields label {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .shape-preview {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        padding: 24px 0;
+      }
+      .shape-preview button {
+        background: #477df9;
+        color: white;
+        border: 0;
+        min-height: 36px;
+      }
+      #shape-board {
+        width: 280px;
+        height: 180px;
+        max-width: 100%;
+        background: #f1f3f6;
+        touch-action: none;
+        margin: 12px 0;
+      }
+      #shape-polygon {
+        fill: #477df944;
+        stroke: #477df9;
+        stroke-width: 0.6;
+      }
+      #shape-handles circle {
+        fill: #fff;
+        stroke: #315fc9;
+        stroke-width: 1;
+        cursor: grab;
+      }
     </style>
   </head>
   <body>
@@ -583,6 +636,10 @@
 
     <main>
       <section id="tab-palette">
+        <details class="shape-card" open>
+          <summary>Форма и размеры кнопок</summary>
+          <div id="button-shape-editor"></div>
+        </details>
         <div class="toolbar">
           <input type="search" id="palette-filter" placeholder="Фильтр: фон, текст, --accent…" />
           <label class="switch-row">
@@ -646,6 +703,8 @@
     </footer>
 
     <script src="../_shared/theme_tokens.js"></script>
+    <script src="../_shared/button_shape.js"></script>
     <script src="theme_editor.js"></script>
+    <script src="button_shape_editor.js"></script>
   </body>
 </html>
