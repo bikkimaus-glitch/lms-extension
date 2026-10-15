@@ -29,6 +29,9 @@ if (typeof window.__culmsCustomThemeInitialized === 'undefined') {
   const VARS_KEY = 'customThemeVars';
   const CSS_KEY = 'customThemeCss';
 
+  const SHAPE_KEY = 'customThemeButtonShape';
+  let shape = {};
+
   const STYLE_ID = 'culms-custom-theme';
 
   let enabled = false;
@@ -44,7 +47,7 @@ if (typeof window.__culmsCustomThemeInitialized === 'undefined') {
   function buildCss() {
     const catalogue = tokens();
     if (!catalogue) return '';
-    return catalogue.buildCss(vars, css);
+    return catalogue.buildCss(vars, css) + (window.cuLmsButtonShape?.buildCss(shape) || '');
   }
 
   /** Держит наш стиль последним: иначе тёмная тема перебьёт переменные. */
@@ -95,13 +98,14 @@ if (typeof window.__culmsCustomThemeInitialized === 'undefined') {
   async function init() {
     const [syncData, localData] = await Promise.all([
       browser.storage.sync.get(SETTING_KEY),
-      browser.storage.local.get([VARS_KEY, CSS_KEY]),
+      browser.storage.local.get([VARS_KEY, CSS_KEY, SHAPE_KEY]),
     ]);
 
     const catalogue = tokens();
     enabled = !!syncData[SETTING_KEY];
     vars = catalogue ? catalogue.normalizeVars(localData[VARS_KEY]) : {};
     css = catalogue ? catalogue.normalizeCss(localData[CSS_KEY]) : '';
+    shape = localData[SHAPE_KEY] || {};
     apply();
   }
 
@@ -122,6 +126,10 @@ if (typeof window.__culmsCustomThemeInitialized === 'undefined') {
       dirty = true;
     }
 
+    if (area === 'local' && SHAPE_KEY in changes) {
+      shape = changes[SHAPE_KEY].newValue || {};
+      dirty = true;
+    }
     if (dirty) apply();
   });
 

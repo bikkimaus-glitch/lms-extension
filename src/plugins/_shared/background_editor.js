@@ -60,7 +60,12 @@ if (typeof window.__culmsBackgroundEditorInitialized === 'undefined') {
   let busy = false;
   let fit = 'cover';
   let veil = 60;
+  let videoPlayback = true;
+  let videoSpeed = 1;
 
+  window.addEventListener('culms-video-status', () => {
+    if (root) render();
+  });
   const background = () => window.cuLmsCustomBackground || null;
 
   // --- КАРТИНКА ---
@@ -118,20 +123,22 @@ if (typeof window.__culmsBackgroundEditorInitialized === 'undefined') {
 
   async function setImage(scope, file) {
     if (!file || busy) return;
-    if (!/^image\//.test(file.type)) {
-      setStatus('Это не картинка.');
+    const isVideo = /^video\/(mp4|webm)$/.test(file.type);
+    if (!/^image\//.test(file.type) && !isVideo) {
+      setStatus('Выберите изображение или видео MP4 / WebM.');
       return;
     }
-    if (file.size > MAX_SOURCE) {
-      setStatus(`Файл больше ${MAX_SOURCE / (1024 * 1024)} МБ.`);
+    const limit = isVideo ? 20 * 1024 * 1024 : MAX_SOURCE;
+    if (file.size > limit) {
+      setStatus(`Файл больше ${limit / (1024 * 1024)} МБ.`);
       return;
     }
 
     busy = true;
     render();
     try {
-      setStatus('Готовлю картинку…');
-      const prepared = await prepareImage(file, setStatus);
+      setStatus(isVideo ? 'Сохраняю видео…' : 'Готовлю картинку…');
+      const prepared = isVideo ? await readAsDataUrl(file) : await prepareImage(file, setStatus);
       await browser.storage.local.set({ [scope.key]: prepared });
       // Человек только что поставил фон — значит, хочет его видеть, даже если
       // тумблер «Своя картинка на фоне» был выключен.
@@ -139,7 +146,7 @@ if (typeof window.__culmsBackgroundEditorInitialized === 'undefined') {
       if (!sync[SETTING_KEY]) await browser.storage.sync.set({ [SETTING_KEY]: true });
       setStatus('');
     } catch (_error) {
-      setStatus('Не удалось обработать картинку. Выберите другой файл.');
+      setStatus('Не удалось сохранить фон. Проверьте формат файла и свободное место.');
     } finally {
       busy = false;
       render();
@@ -297,10 +304,19 @@ if (typeof window.__culmsBackgroundEditorInitialized === 'undefined') {
         },
       });
       const thumb = el('span', { class: 'scope-thumb' });
-      if (scope.image) thumb.style.backgroundImage = cssUrl(scope.image);
+      if (scope.image && !window.cuLmsBackgroundVideo?.isVideo(scope.image))
+        thumb.style.backgroundImage = cssUrl(scope.image);
+      if (window.cuLmsBackgroundVideo?.isVideo(scope.image)) thumb.textContent = '▶';
       const text = el('span', { class: 'scope-text' }, [
         el('div', { text: scope.title }),
-        el('div', { class: 'muted', text: scope.image ? 'своя картинка' : 'нет картинки' }),
+        el('div', {
+          class: 'muted',
+          text: scope.image
+            ? window.cuLmsBackgroundVideo?.isVideo(scope.image)
+              ? 'своё видео'
+              : 'своя картинка'
+            : 'нет фона',
+        }),
       ]);
       const badge =
         scope.key === state.shownKey ? el('span', { class: 'badge', text: 'на экране' }) : null;
@@ -319,7 +335,9 @@ if (typeof window.__culmsBackgroundEditorInitialized === 'undefined') {
 
     const preview = el('div', { class: 'preview muted' });
     if (selected.image) {
-      preview.style.backgroundImage = cssUrl(selected.image);
+      if (window.cuLmsBackgroundVideo?.isVideo(selected.image))
+        preview.textContent = '▶ Видеофон · MP4 / WebM';
+      else preview.style.backgroundImage = cssUrl(selected.image);
     } else {
       preview.textContent =
         'Картинки нет. Выберите файл или перетащите его на панель.' +
@@ -329,7 +347,7 @@ if (typeof window.__culmsBackgroundEditorInitialized === 'undefined') {
 
     const fileInput = el('input', {
       type: 'file',
-      accept: 'image/*',
+      accept: 'image/*,video/mp4,video/webm',
       hidden: true,
       onchange: () => {
         const file = fileInput.files && fileInput.files[0];
@@ -345,7 +363,7 @@ if (typeof window.__culmsBackgroundEditorInitialized === 'undefined') {
           class: 'primary',
           'data-action': 'pick',
           disabled: busy,
-          text: selected.image ? 'Заменить картинку' : 'Выбрать картинку',
+          text: selected.image ? 'Заменить фон' : 'Фото или видео',
           onclick: () => fileInput.click(),
         }),
         el('button', {
@@ -405,6 +423,48 @@ if (typeof window.__culmsBackgroundEditorInitialized === 'undefined') {
       ])
     );
 
+    if (window.cuLmsBackgroundVideo?.isVideo(winner?.image)) {
+      const pause = el('button', {
+        type: 'button',
+        text: videoPlayback ? 'Пауза видео' : 'Продолжить видео',
+        onclick: () => void browser.storage.sync.set({ backgroundVideoPlayback: !videoPlayback }),
+      });
+      const speed = el(
+        'select',
+        {
+          'aria-label': 'Скорость видео',
+          onchange: () =>
+            void browser.storage.sync.set({ backgroundVideoSpeed: Number(speed.value) }),
+        },
+        [0.25, 0.5, 1, 1.5, 2].map((v) =>
+          el('option', { value: String(v), selected: v === videoSpeed, text: v + '×' })
+        )
+      );
+      body.appendChild(
+        el('div', { class: 'row' }, [
+          pause,
+          el('label', { class: 'field' }, [el('span', { text: 'Скорость' }), speed]),
+        ])
+      );
+      const status = window.cuLmsBackgroundVideo.status();
+      body.appendChild(
+        el('p', {
+          class: 'muted',
+          text: status.failed
+            ? 'Видео не воспроизводится. Попробуйте MP4 (H.264) или WebM (VP8/VP9).'
+            : status.reducedMotion
+              ? 'В системе уменьшено движение — показан неподвижный кадр.'
+              : 'Без звука, по кругу. В скрытой вкладке видео приостанавливается. Для видео «Плиткой» работает как «Заполнить экран».',
+        })
+      );
+    }
+    body.appendChild(
+      el('p', {
+        class: 'muted',
+        text: 'Видео MP4 / WebM до 20 МБ. Файл хранится только в браузере и входит в экспорт профиля с фонами.',
+      })
+    );
+
     body.appendChild(
       el('button', {
         type: 'button',
@@ -424,7 +484,14 @@ if (typeof window.__culmsBackgroundEditorInitialized === 'undefined') {
 
   async function open() {
     if (host) return;
-    const sync = await browser.storage.sync.get([FIT_KEY, VEIL_KEY]);
+    const sync = await browser.storage.sync.get([
+      FIT_KEY,
+      VEIL_KEY,
+      'backgroundVideoPlayback',
+      'backgroundVideoSpeed',
+    ]);
+    videoPlayback = sync.backgroundVideoPlayback !== false;
+    videoSpeed = Number(sync.backgroundVideoSpeed) || 1;
     if (sync[FIT_KEY]) fit = sync[FIT_KEY];
     if (Number.isFinite(Number(sync[VEIL_KEY])) && sync[VEIL_KEY] !== undefined)
       veil = Number(sync[VEIL_KEY]);
@@ -496,11 +563,22 @@ if (typeof window.__culmsBackgroundEditorInitialized === 'undefined') {
       else close();
     }
     if (area === 'sync' && host) {
+      if ('backgroundVideoPlayback' in changes)
+        videoPlayback = changes.backgroundVideoPlayback.newValue !== false;
+      if ('backgroundVideoSpeed' in changes)
+        videoSpeed = Number(changes.backgroundVideoSpeed.newValue) || 1;
       if (FIT_KEY in changes) fit = changes[FIT_KEY].newValue || 'cover';
       if (VEIL_KEY in changes && changes[VEIL_KEY].newValue !== undefined) {
         veil = Number(changes[VEIL_KEY].newValue);
       }
-      if (FIT_KEY in changes || VEIL_KEY in changes || SETTING_KEY in changes) render();
+      if (
+        FIT_KEY in changes ||
+        VEIL_KEY in changes ||
+        SETTING_KEY in changes ||
+        'backgroundVideoPlayback' in changes ||
+        'backgroundVideoSpeed' in changes
+      )
+        render();
     }
   });
 

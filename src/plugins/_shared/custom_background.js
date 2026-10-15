@@ -98,6 +98,8 @@ if (typeof window.__culmsCustomBackgroundInitialized === 'undefined') {
 
   const scopes = window.cuLmsBackgroundScopes;
 
+  let videoPlayback = true;
+  let videoSpeed = 1;
   let enabled = false;
   let editorActive = false;
   let fit = DEFAULT_FIT;
@@ -198,6 +200,7 @@ html,
       if (depth > MAX_DEPTH) return;
 
       for (const element of parent.children) {
+        if (element.closest('.culms-video-layer')) continue;
         const rect = element.getBoundingClientRect();
         if (rect.width < minWidth) continue;
 
@@ -252,7 +255,15 @@ html,
     // разделы по-другому.
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
-      if (enabled && shownImage && markCanvasLayers()) render();
+      if (enabled && shownImage) {
+        const changed = markCanvasLayers();
+        if (
+          changed ||
+          (window.cuLmsBackgroundVideo?.isVideo(shownImage) &&
+            document.querySelector(`.${CANVAS_CLASS}:not(.culms-video-canvas)`))
+        )
+          render();
+      }
     }, 150);
   };
 
@@ -279,7 +290,15 @@ html,
       // Angular пересобирает раздел при переходе, и новое полотно приходит
       // уже без нашего класса. Если у нового раздела другой цвет темы,
       // подложку пересобираем под него.
-      if (enabled && shownImage && markCanvasLayers()) render();
+      if (enabled && shownImage) {
+        const changed = markCanvasLayers();
+        if (
+          changed ||
+          (window.cuLmsBackgroundVideo?.isVideo(shownImage) &&
+            document.querySelector(`.${CANVAS_CLASS}:not(.culms-video-canvas)`))
+        )
+          render();
+      }
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
@@ -301,14 +320,29 @@ html,
 
     if (!enabled || !shownImage) {
       if (style) style.remove();
+      window.cuLmsBackgroundVideo?.destroy();
       unmarkCanvasLayers();
       return;
     }
 
     // Сначала разметка: из неё узнаём цвет темы для подложки.
     markCanvasLayers();
-
-    const css = buildCss(shownImage);
+    const video = window.cuLmsBackgroundVideo;
+    const isVideo = video?.isVideo(shownImage);
+    video?.sync([...document.querySelectorAll('.' + CANVAS_CLASS)], shownImage, {
+      fit,
+      veil,
+      color: veilColor,
+      playback: videoPlayback,
+      speed: videoSpeed,
+    });
+    const css = isVideo
+      ? `
+      .culms-video-canvas {isolation:isolate!important;background-image:none!important;}
+      .culms-video-layer {position:fixed!important;inset:0!important;z-index:-1!important;pointer-events:none!important;overflow:hidden!important;background:rgb(${veilColor});}
+      .culms-video-layer > video,.culms-video-layer > div {position:absolute!important;inset:0!important;width:100%!important;height:100%!important;pointer-events:none!important;}
+    `
+      : buildCss(shownImage);
     if (style) {
       if (style.textContent !== css) style.textContent = css;
     } else {
@@ -353,10 +387,18 @@ html,
 
   async function init() {
     const [syncData, localData] = await Promise.all([
-      browser.storage.sync.get([SETTING_KEY, FIT_KEY, VEIL_KEY]),
+      browser.storage.sync.get([
+        SETTING_KEY,
+        FIT_KEY,
+        VEIL_KEY,
+        'backgroundVideoPlayback',
+        'backgroundVideoSpeed',
+      ]),
       browser.storage.local.get(EDITOR_KEY),
     ]);
 
+    videoPlayback = syncData.backgroundVideoPlayback !== false;
+    videoSpeed = Math.min(2, Math.max(0.25, Number(syncData.backgroundVideoSpeed) || 1));
     enabled = !!syncData[SETTING_KEY];
     fit = normalizeFit(syncData[FIT_KEY]);
     veil = normalizeVeil(syncData[VEIL_KEY]);
@@ -368,6 +410,17 @@ html,
     let dirty = false;
 
     if (area === 'sync') {
+      if ('backgroundVideoPlayback' in changes) {
+        videoPlayback = changes.backgroundVideoPlayback.newValue !== false;
+        dirty = true;
+      }
+      if ('backgroundVideoSpeed' in changes) {
+        videoSpeed = Math.min(
+          2,
+          Math.max(0.25, Number(changes.backgroundVideoSpeed.newValue) || 1)
+        );
+        dirty = true;
+      }
       if (SETTING_KEY in changes) {
         enabled = !!changes[SETTING_KEY].newValue;
         dirty = true;

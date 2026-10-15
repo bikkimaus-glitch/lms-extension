@@ -106,6 +106,8 @@ if (typeof window.cuLmsSettings === 'undefined') {
     choice('logoObjectFit', 'appearance', ['contain', 'cover', 'fill', 'none'], 'contain'),
     range('logoScale', 'appearance', 25, 400, 100),
     choice('backgroundFit', 'appearance', ['cover', 'contain', 'fill', 'tile', 'none'], 'cover'),
+    bool('backgroundVideoPlayback', 'appearance', true),
+    range('backgroundVideoSpeed', 'appearance', 0.25, 2, 1),
     range('backgroundVeil', 'appearance', 0, 95, 60),
 
     // --- своя тема ---
@@ -115,6 +117,7 @@ if (typeof window.cuLmsSettings === 'undefined') {
     data('customThemeVars', 'theme', 'object'),
     data('customThemeCss', 'theme', 'string'),
     data('customThemeName', 'theme', 'string'),
+    data('customThemeButtonShape', 'theme', 'object'),
 
     // --- функции ---
     bool('customCourseNamesToggle', 'features'),

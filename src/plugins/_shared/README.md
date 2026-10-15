@@ -874,3 +874,7 @@ AKH — по `name` (в DOM таблицы `taskId` и `courseId` отсутст
 `apricot_tasks_fix.js` работает в page-context и до `storage` не дотянется, поэтому
 `tasks_fix.js` кладёт имена выбранных курсов в `document.documentElement.dataset.culmsAkhCourses` —
 DOM у isolated и main world общий.
+
+## Формы и видео (этот форк)
+
+`button_shape.js` валидирует геометрию и генерирует CSS поверх custom_theme. `background_video.js` управляет изолированными слоями видео, освобождает object URL, учитывает скрытие вкладки и reduced motion. `background_editor.js` принимает локальные MP4/WebM до 20 МБ. См. [инструкцию](../../../APPEARANCE-FORK.md).

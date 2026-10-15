@@ -15,6 +15,7 @@ const manifest = {
     // и логотипу: по ним он узнаёт, стоит ли где-то своя картинка фона.
     'plugins/_shared/background_scopes.js',
     'plugins/_shared/custom_logo.js',
+    'plugins/_shared/background_video.js',
     'plugins/_shared/custom_background.js',
     // Редактору фона — пережатие гифок; файл защищён от повторной загрузки,
     // так что со страницами курсов, где он тоже нужен, не конфликтует.
@@ -22,6 +23,7 @@ const manifest = {
     'plugins/_shared/background_editor.js',
     // Каталог переменных нужен и теме, и редактору — поэтому идёт первым.
     'plugins/_shared/theme_tokens.js',
+    'plugins/_shared/button_shape.js',
     'plugins/_shared/custom_theme.js',
     'plugins/_shared/theme_editor_host.js',
     'plugins/_shared/version_check.js',
