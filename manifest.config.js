@@ -133,6 +133,7 @@ export default defineManifest({
         'plugins/_shared/settings_registry.js',
         'plugins/_shared/theme_tokens.js',
         'plugins/_shared/button_shape.js',
+        'plugins/_shared/slime_effects.js',
         'plugins/_shared/custom_theme.js',
         'plugins/_shared/theme_editor_host.js',
         'plugins/theme-editor/theme-editor.html',

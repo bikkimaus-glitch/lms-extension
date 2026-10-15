@@ -133,3 +133,5 @@
 ## Геометрия кнопок и видеофоны (этот форк)
 
 `customThemeButtonShape` входит в группу theme; playback/speed — appearance. Видео сохраняется строкой data:video/mp4 или data:video/webm в существующих customBackground* (content). Старые профили с изображениями совместимы; геометрия нормализуется при применении. Подробнее: [APPEARANCE-FORK.md](APPEARANCE-FORK.md).
+
+customThemeButtonShape.soft включает квадратичное сглаживание контура; smoothing (20–100) задаёт его плавность. Сами SVG-определения в файл не попадают: расширение строит их из проверенных координат.
